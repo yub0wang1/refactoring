@@ -68,6 +68,26 @@ public class StatementPrinter {
     }
 
     /**
+     * Calculates the volume credits earned for a given performance.
+     * @param performance the performance to calculate credits for
+     * @return the volume credits earned
+     */
+    private int getVolumeCredits(Performance performance) {
+        int result = 0;
+        final Play play = getPlay(performance);
+
+        // add volume credits
+        result += Math.max(performance.getAudience()
+                - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
+        // add extra credit for every five comedy attendees
+        if ("comedy".equals(play.getType())) {
+            result += performance.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
+        }
+
+        return result;
+    }
+
+    /**
      * Returns a formatted statement of the invoice associated with this printer.
      * @return the formatted statement
      * @throws RuntimeException if one of the play types is not known
@@ -83,13 +103,7 @@ public class StatementPrinter {
         for (Performance performance : invoice.getPerformances()) {
             final Play play = getPlay(performance);
 
-            // add volume credits
-            volumeCredits += Math.max(performance.getAudience()
-                    - Constants.BASE_VOLUME_CREDIT_THRESHOLD, 0);
-            // add extra credit for every five comedy attendees
-            if ("comedy".equals(play.getType())) {
-                volumeCredits += performance.getAudience() / Constants.COMEDY_EXTRA_VOLUME_FACTOR;
-            }
+            volumeCredits += getVolumeCredits(performance);
 
             // print line for this order
             result.append(String.format("  %s: %s (%s seats)%n",
